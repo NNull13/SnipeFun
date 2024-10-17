@@ -16,9 +16,11 @@ import (
 var validate = validator.New()
 
 func handleEvent(event TradeEvent) {
+	walletWatched := config.WalletsToWatch[event.TraderPublicKey]
+
 	switch event.TxType {
 	case createEvent:
-		if searching && event.shouldExecute() {
+		if searching && ((walletWatched != nil && walletWatched.NewTokens) || event.shouldExecute()) {
 			err := executeTradeRetry(Trade{Type: buyType, Token: event.Mint}, config.Retries)
 			if managing && err == nil {
 				record := Record{
@@ -38,16 +40,22 @@ func handleEvent(event TradeEvent) {
 		record := watchedTokens[event.Mint]
 		if managing {
 			typeTrade := ""
-			if event.shouldExecute() {
-				typeTrade = sellType
-			} else {
-				if config.TakeProfit && event.MarketCapSol > record.MarketCap*config.TakeProfitPcg/100 {
-					typeTrade = tpType
-				}
-				if config.StopLoss && event.MarketCapSol < record.MarketCap*config.StopLossPcg/100 {
+			switch {
+			case walletWatched != nil:
+				switch {
+				case walletWatched.Sell && event.TxType == sellEvent:
 					typeTrade = sellType
+				case walletWatched.Buy && event.TxType == buyEvent:
+					typeTrade = buyType
 				}
+			case event.shouldExecute():
+				typeTrade = sellType
+			case config.TakeProfit && event.MarketCapSol > record.MarketCap*config.TakeProfitPcg/100:
+				typeTrade = tpType
+			case config.StopLoss && event.MarketCapSol < record.MarketCap*config.StopLossPcg/100:
+				typeTrade = sellType
 			}
+
 			if typeTrade != "" {
 				err := executeTradeRetry(Trade{Type: sellType, Token: event.Mint}, config.Retries)
 				if err == nil {
@@ -145,7 +153,7 @@ func tokenQualityCheck(t TokenInfo) (string, bool) {
 		return getSymbol(false) + " WebsiteFilter", false
 	}
 
-	if len(t.Data.Description) <= config.DescriptionFilter {
+	if config.DescriptionFilter != 0 && len(t.Data.Description) <= config.DescriptionFilter {
 		return getSymbol(false) + " DescriptionFilter", false
 	}
 

@@ -26,9 +26,20 @@ func getWatchedTokenKeys() []string {
 	return keys
 }
 
+func getWatchedWalletsKeys() []string {
+	keys := make([]string, 0, len(watchedTokens))
+	for k, _ := range config.WalletsToWatch {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func subscribeToEvents(onlyManage bool) {
+	watchedTokensKeys := getWatchedTokenKeys()
+	watchedWalletsKey := getWatchedWalletsKeys()
 	subscriptions := []map[string]any{
-		{"method": "subscribeTokenTrade", "keys": getWatchedTokenKeys()},
+		{"method": "subscribeTokenTrade", "keys": watchedTokensKeys},
+		{"method": "subscribeAccountTrade ", "keys": watchedWalletsKey},
 	}
 	if !onlyManage {
 		subscriptions = append(subscriptions, map[string]any{"method": "subscribeNewToken"})
