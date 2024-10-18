@@ -1,7 +1,5 @@
 package config
 
-import "GoSnipeFun/bot"
-
 const (
 	//Wallet & API keys
 	ApiKey      string = "" // api key to get the data from the website
@@ -46,7 +44,11 @@ const (
 
 )
 
-var WalletsToWatch = map[string]*bot.WalletToWatch{
+var WalletsToWatch = map[string]*struct {
+	NewTokens bool
+	Buy       bool
+	Sell      bool
+}{
 	"samp13": { // address to watch
 		NewTokens: false, // snipe new tokens
 		Buy:       false, // copy trade to buy the same tokens

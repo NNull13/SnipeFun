@@ -6,12 +6,6 @@ import (
 	"GoSnipeFun/config"
 )
 
-type WalletToWatch struct {
-	NewTokens bool
-	Buy       bool
-	Sell      bool
-}
-
 type TradeEvent struct {
 	Signature             string  `json:"signature"`
 	Mint                  string  `json:"mint"`
