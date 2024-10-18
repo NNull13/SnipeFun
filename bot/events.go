@@ -1,15 +1,15 @@
 package bot
 
 import (
+	"GoSnipeFun/config"
 	"encoding/json"
 	"log"
-
-	"GoSnipeFun/config"
 )
 
 var (
-	searching bool
-	managing  = (config.StopLoss || config.TakeProfit)
+	searching      bool
+	managing       = config.StopLoss || config.TakeProfit
+	healthChecking = config.TwitterFilter || config.TelegramFilter || config.ImageFilter || config.WebsiteFilter || config.DescriptionFilter > 0
 )
 
 const (
@@ -37,9 +37,13 @@ func getWatchedWalletsKeys() []string {
 func subscribeToEvents(onlyManage bool) {
 	watchedTokensKeys := getWatchedTokenKeys()
 	watchedWalletsKey := getWatchedWalletsKeys()
-	subscriptions := []map[string]any{
-		{"method": "subscribeTokenTrade", "keys": watchedTokensKeys},
-		{"method": "subscribeAccountTrade ", "keys": watchedWalletsKey},
+
+	subscriptions := []map[string]any{}
+	if len(watchedWalletsKey) > 0 {
+		subscriptions = append(subscriptions, map[string]any{"method": "subscribeTokenTrade", "keys": watchedTokensKeys})
+	}
+	if len(watchedTokensKeys) > 0 {
+		subscriptions = append(subscriptions, map[string]any{"method": "subscribeAccountTrade ", "keys": watchedWalletsKey})
 	}
 	if !onlyManage {
 		subscriptions = append(subscriptions, map[string]any{"method": "subscribeNewToken"})
@@ -74,6 +78,7 @@ func readMessages(messageChan chan []byte) {
 func processMessage(messageChan chan []byte) {
 	for message := range messageChan {
 		var event TradeEvent
+		log.Printf("event: %v", string(message))
 		if err := json.Unmarshal(message, &event); err != nil {
 			log.Printf("unmarshal error: %v", err)
 			continue
@@ -84,26 +89,7 @@ func processMessage(messageChan chan []byte) {
 			continue
 		}
 
-		log.Printf("event: %+v", event)
-		sendNotification(Notification{Message: event.ToString(), Type: eventNotification})
-
-		tokenData, err := fetchTokenInfoRetry(event.Mint, config.Retries)
-		if tokenData == nil || err != nil {
-			continue
-		}
-
-		msg, isHealthy := tokenQualityCheck(*tokenData)
-		if isHealthy {
-			sendNotification(Notification{
-				Message: "**--- Token Quality Check " + msg + " ---**\n" +
-					"**Token:** `" + event.Mint + "`\n" +
-					tokenData.ToString(), Type: infoNotification})
-			handleEvent(event)
-		} else {
-			sendNotification(Notification{
-				Message: "**--- Token Quality Check " + msg + " ---**\n" +
-					"**Token:** `" + event.Mint + "`\n", Type: infoNotification})
-		}
+		handleEvent(event)
 	}
 }
 

@@ -17,6 +17,15 @@ type TradeEvent struct {
 	VTokensInBondingCurve float64 `json:"vTokensInBondingCurve"`
 	VSolInBondingCurve    float64 `json:"vSolInBondingCurve"`
 	MarketCapSol          float64 `json:"marketCapSol"`
+	Name                  string  `json:"name"`
+	Symbol                string  `json:"symbol"`
+	MetaData              string  `json:"uri"`
+	Description           string  `json:"description"`
+	CreatedOn             string  `json:"createdOn"`
+	Twitter               string  `json:"twitter"`
+	Telegram              string  `json:"telegram"`
+	Website               string  `json:"website"`
+	ShowName              bool    `json:"showName"`
 }
 
 func (e TradeEvent) ToString() (msg string) {
@@ -41,7 +50,10 @@ func (e TradeEvent) ToString() (msg string) {
 			"**New Token Balance:** `%.2f`\n"+
 			"**VTokens In Bonding Curve:** `%.2f`\n"+
 			"**VSol In Bonding Curve:** `%.2f`\n"+
-			"**Market Cap (Sol):** `%.2f`",
+			"**Market Cap (Sol):** `%.2f`"+
+			"**Name:** `%s`\n"+
+			"**Symbol:** `%s`\n"+
+			"**Description:** `%s`\n",
 			riskSymbol, e.Mint, e.TxType, e.TraderPublicKey, e.TokenAmount, e.NewTokenBalance,
 			e.VTokensInBondingCurve, e.VSolInBondingCurve, e.MarketCapSol)
 	}
@@ -95,17 +107,15 @@ const (
 )
 
 type TokenInfo struct {
-	Data struct {
-		Name        string `json:"name" validate:"required"`
-		Symbol      string `json:"symbol" validate:"required"`
-		Description string `json:"description" validate:"required"`
-		Image       string `json:"image" validate:"required,url"`
-		CreatedOn   string `json:"createdOn" validate:"required,url"`
-		Twitter     string `json:"twitter"`
-		Telegram    string `json:"telegram"`
-		Website     string `json:"website"`
-		ShowName    bool   `json:"showName"`
-	} `json:"data"`
+	Name        string `json:"name" validate:"required"`
+	Symbol      string `json:"symbol" validate:"required"`
+	Description string `json:"description" validate:"required"`
+	Image       string `json:"image" validate:"required,url"`
+	CreatedOn   string `json:"createdOn" validate:"required,url"`
+	Twitter     string `json:"twitter"`
+	Telegram    string `json:"telegram"`
+	Website     string `json:"website"`
+	ShowName    bool   `json:"showName"`
 }
 
 func (t TokenInfo) ToString() string {
@@ -118,6 +128,6 @@ func (t TokenInfo) ToString() string {
 			"**Website:** `%s`\n"+
 			"**Image:** `%s`\n"+
 			"**Created On:** `%s`",
-		t.Data.Name, t.Data.Symbol, t.Data.Description, t.Data.Website,
-		t.Data.Twitter, t.Data.Telegram, t.Data.Image, t.Data.CreatedOn)
+		t.Name, t.Symbol, t.Description, t.Website,
+		t.Twitter, t.Telegram, t.Image, t.CreatedOn)
 }

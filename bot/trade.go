@@ -13,6 +13,30 @@ import (
 	"github.com/blocto/solana-go-sdk/types"
 )
 
+func getTokenInfo(url string) (TokenInfo, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return TokenInfo{}, fmt.Errorf("failed to fetch data: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return TokenInfo{}, fmt.Errorf("failed to read response body: %v", err)
+	}
+	log.Printf("token info: %s", string(body))
+	if resp.StatusCode != http.StatusOK {
+		return TokenInfo{}, fmt.Errorf("unexpected status code: %d response: %s", resp.StatusCode, string(body))
+	}
+
+	var tokenInfo TokenInfo
+	if err = json.Unmarshal(body, &tokenInfo); err != nil {
+		return TokenInfo{}, fmt.Errorf("failed to unmarshal json: %v", err)
+	}
+
+	return tokenInfo, nil
+}
+
 func executeTradeRetry(trade Trade, retries int) (err error) {
 	for i := 0; i < retries; i++ {
 		err = executeTrade(trade)
@@ -71,20 +95,15 @@ func executeTradeLocal(trade Trade) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		var response map[string]any
-		if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
-			log.Printf("decode error: %v", err)
-			return err
-		}
-		log.Printf("Error in %s trade: %v", trade.Type, response)
-		return fmt.Errorf("error in %s trade: %v", trade.Type, response)
-	}
-
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("read body error: %v", err)
 		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Error in %s trade status: %v", trade.Type, resp.StatusCode)
+		return fmt.Errorf("status %s in trade: %v", resp.StatusCode, trade.Type)
 	}
 
 	ctx := context.Background()

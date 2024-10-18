@@ -1,6 +1,6 @@
 module GoSnipeFun
 
-go 1.22
+go 1.23
 
 require (
 	github.com/blocto/solana-go-sdk v1.30.0
