@@ -22,9 +22,8 @@ func handleEvent(event TradeEvent) {
 		avoidFilters  = walletWatched != nil && walletWatched.AvoidFilters
 	)
 
-	isCreate := event.TxType == createEvent || event.TxType == initialBuyEvent
-
 	// Perform Token Quality Check
+	isCreate := event.TxType == createEvent || event.TxType == initialBuyEvent
 	if isCreate {
 		if isHealthy, err = performTokenQualityCheck(event, avoidFilters); err != nil {
 			return
