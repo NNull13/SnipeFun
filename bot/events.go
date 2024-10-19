@@ -14,9 +14,10 @@ var (
 )
 
 const (
-	createEvent = "create"
-	sellEvent   = "sell"
-	buyEvent    = "buy"
+	createEvent     = "create"
+	sellEvent       = "sell"
+	buyEvent        = "buy"
+	initialBuyEvent = "initialBuy"
 )
 
 func getWatchedTokenKeys() []string {
